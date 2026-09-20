@@ -161,7 +161,10 @@ MIT
 | `editorial` | Editorial | `editorial` | Bebas Neue / Libre Franklin |
 
 Cover fonts load via Google Fonts `@import` at render time — no local caching.
-Body pages always use system fonts (Times / Helvetica) via ReportLab.
+Body pages use ReportLab's built-in fonts by default and automatically select an
+installed CJK TrueType font when the document contains CJK text. Set
+`MINIMAX_PDF_CJK_FONT` (and optionally `MINIMAX_PDF_CJK_BOLD_FONT`) to override
+discovery; font files are never bundled by the skill.
 
 ## content.json schema
 
