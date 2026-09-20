@@ -9,7 +9,8 @@ Usage:
 
 Outputs tokens.json consumed by all downstream scripts.
 Cover fonts are loaded via Google Fonts @import in the cover HTML (no local caching).
-Body fonts always use ReportLab system fonts (Times-Bold / Helvetica).
+Body fonts use ReportLab system fonts by default; render_body.py selects an
+installed CJK TrueType font when CJK content requires one.
 Exit codes: 0 success, 1 bad args, 3 write error
 """
 
@@ -221,7 +222,7 @@ PALETTES = {
 
 # ── Font pairs — CSS names for cover HTML, ReportLab names for body ─────────────
 # cover uses Google Fonts via @import (no local disk caching needed)
-# body always uses system fonts via ReportLab
+# body uses ReportLab fonts, with CJK fallback selected by render_body.py
 FONT_PAIRS = {
     "authoritative": {
         "display_css":  "Playfair Display",
@@ -439,9 +440,11 @@ def build_tokens(
         "font_body_rl":     font_pair["body_rl"],
         "font_body_b_rl":   font_pair["body_b_rl"],
 
-        # Legacy keys (kept so render_body.py's register_fonts is a no-op)
+        # Optional font paths are consumed by render_body.py.  The renderer
+        # also detects an installed CJK font when the built-in fonts lack it.
         "font_heading":  font_pair["display_rl"],
         "font_body_b":   font_pair["body_b_rl"],
+        "font_code_rl":  font_pair["body_rl"],
         "font_paths":    {},
 
         # Type scale (pt)

@@ -67,10 +67,13 @@ Two typefaces maximum. Always.
 | Text (body, captions, UI) | Highly readable at 10–11pt | Helvetica, Arial (sans) |
 
 Cover fonts are loaded live via `@import url(...)` in the cover HTML — Playwright
-fetches them at render time, no local caching. Body pages always use system fonts
-(Times-Bold / Helvetica) via ReportLab — consistent and offline-safe.
+fetches them at render time, no local caching. Body pages use ReportLab's built-in
+fonts by default, but automatically select an installed CJK TrueType font when
+CJK text is present. Set `MINIMAX_PDF_CJK_FONT` (and optionally
+`MINIMAX_PDF_CJK_BOLD_FONT`) to override discovery; no font files are bundled.
 
-Pairs by mood (cover HTML only — body always uses system fonts):
+Pairs by mood (cover HTML only — body uses the built-in fonts unless CJK
+fallback is selected):
 - Authoritative: `Playfair Display` / `IBM Plex Sans`
 - Confident: `Syne` / `Nunito Sans`
 - Expressive: `Fraunces` / `Inter`
@@ -81,7 +84,7 @@ Pairs by mood (cover HTML only — body always uses system fonts):
 - Dynamic: `Montserrat` / `Montserrat`
 - Classical: `Cormorant` / `Crimson Pro`
 - Editorial: `Bebas Neue` / `Libre Franklin`
-- Body fallback (always): `Times-Bold` / `Helvetica` (ReportLab system fonts)
+- Body fallback: `Times-Bold` / `Helvetica` (ReportLab built-in fonts)
 
 ### Type scale
 

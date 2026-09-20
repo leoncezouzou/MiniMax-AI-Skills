@@ -33,6 +33,8 @@ import json
 import os
 import sys
 import importlib.util
+import shutil
+import subprocess
 
 
 # ── Dependency bootstrap ───────────────────────────────────────────────────────
@@ -64,14 +66,146 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 
 # ── Font registration ──────────────────────────────────────────────────────────
+_CJK_SAMPLE_CODEPOINT = 0x4E2D  # 中
+_BUILTIN_BODY_FONTS = frozenset({
+    "Courier", "Courier-Bold", "Helvetica", "Helvetica-Bold",
+    "Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic",
+})
+
+
+def _register_font(name: str, path: str, subfont_index: int | None = None,
+                   require_cjk: bool = False) -> bool:
+    """Register a TrueType font, optionally requiring basic CJK coverage."""
+    if not path:
+        return False
+    path = os.path.expandvars(os.path.expanduser(path))
+    if not os.path.isfile(path):
+        return False
+    try:
+        kwargs = {} if subfont_index is None else {"subfontIndex": subfont_index}
+        font = TTFont(name, path, **kwargs)
+        if require_cjk and font.face.charWidths.get(_CJK_SAMPLE_CODEPOINT) is None:
+            return False
+        pdfmetrics.registerFont(font)
+        return True
+    except Exception:
+        return False
+
+
+def _supports_cjk(name: str) -> bool:
+    try:
+        return pdfmetrics.getFont(name).face.charWidths.get(
+            _CJK_SAMPLE_CODEPOINT
+        ) is not None
+    except Exception:
+        return False
+
+
+def _fontconfig_font(style: str = "") -> str | None:
+    """Return a fontconfig-selected CJK font path when fontconfig is available."""
+    if not shutil.which("fc-match"):
+        return None
+    pattern = "sans:lang=zh"
+    if style:
+        pattern += f":style={style}"
+    try:
+        result = subprocess.run(
+            ["fc-match", "-f", "%{file}", pattern],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    path = result.stdout.strip()
+    return path if result.returncode == 0 and path else None
+
+
+def _system_cjk_candidates() -> list[tuple[str, int | None, str | None, int | None]]:
+    """Return (regular path, index, bold path, index) candidates by platform."""
+    if os.name == "nt":
+        windir = os.environ.get("WINDIR", os.environ.get("windir", r"C:\\Windows"))
+        fonts = os.path.join(windir, "Fonts")
+        return [
+            (os.path.join(fonts, "msyh.ttc"), 0,
+             os.path.join(fonts, "msyhbd.ttc"), 0),
+            (os.path.join(fonts, "simsun.ttc"), 0,
+             os.path.join(fonts, "simsun.ttc"), 0),
+            (os.path.join(fonts, "simhei.ttf"), None,
+             os.path.join(fonts, "simhei.ttf"), None),
+        ]
+    if sys.platform == "darwin":
+        return [
+            ("/System/Library/Fonts/PingFang.ttc", 0,
+             "/System/Library/Fonts/PingFang.ttc", 1),
+            ("/System/Library/Fonts/STHeiti Light.ttc", 0,
+             "/System/Library/Fonts/STHeiti Medium.ttc", 0),
+            ("/Library/Fonts/Arial Unicode.ttf", None, None, None),
+        ]
+    return [
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 0,
+         "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", 0,
+         "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc", 0),
+        ("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", 0, None, None),
+        ("/usr/share/fonts/truetype/arphic/uming.ttc", 0, None, None),
+    ]
+
+
 def register_fonts(tokens: dict):
-    """Register TTF fonts from token font_paths if present."""
+    """Register configured fonts and select an installed CJK font when needed.
+
+    ReportLab's built-in fonts do not contain Chinese, Japanese, or Korean
+    glyphs.  Prefer an explicitly configured or environment-selected font and
+    otherwise use a platform font when one is installed.  If no supported font
+    is available, the original ReportLab fonts remain in use.
+    """
+    registered = []
     for name, fpath in tokens.get("font_paths", {}).items():
-        if os.path.exists(fpath):
-            try:
-                pdfmetrics.registerFont(TTFont(name, fpath))
-            except Exception:
-                pass
+        if _register_font(name, fpath):
+            registered.append(name)
+
+    regular = next(
+        (name for name in registered
+         if _supports_cjk(name) and "bold" not in name.lower()),
+        None,
+    )
+    bold = next(
+        (name for name in registered
+         if _supports_cjk(name) and "bold" in name.lower()),
+        None,
+    )
+
+    candidates = _system_cjk_candidates()
+    fontconfig_regular = _fontconfig_font()
+    if fontconfig_regular:
+        candidates.insert(
+            0,
+            (fontconfig_regular, None, _fontconfig_font("bold"), None),
+        )
+    override = os.environ.get("MINIMAX_PDF_CJK_FONT")
+    if override:
+        candidates.insert(
+            0,
+            (override, None,
+             os.environ.get("MINIMAX_PDF_CJK_BOLD_FONT"), None),
+        )
+
+    if regular is None:
+        for regular_path, regular_index, bold_path, bold_index in candidates:
+            if _register_font("MiniMaxCJKRegular", regular_path, regular_index,
+                              require_cjk=True):
+                regular = "MiniMaxCJKRegular"
+                if bold_path and _register_font(
+                    "MiniMaxCJKBold", bold_path, bold_index, require_cjk=True
+                ):
+                    bold = "MiniMaxCJKBold"
+                break
+
+    if regular is None:
+        return {"regular": None, "bold": None}
+
+    return {"regular": regular, "bold": bold or regular}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -187,6 +321,7 @@ def make_styles(t: dict) -> dict:
     hf  = t["font_display_rl"]
     bf  = t["font_body_rl"]
     bfb = t["font_body_b_rl"]
+    code_font = t.get("font_code_rl", "Courier")
     dk  = t["body_text"]
     d   = t["dark"]
     mu  = t["muted"]
@@ -246,11 +381,11 @@ def make_styles(t: dict) -> dict:
             textColor=HexColor(dk),
         ),
         "code": ParagraphStyle("Code",
-            fontName="Courier", fontSize=8.5, leading=12.5,
+            fontName=code_font, fontSize=8.5, leading=12.5,
             textColor=HexColor(dk),
         ),
         "code_lang": ParagraphStyle("CodeLang",
-            fontName="Courier", fontSize=7, leading=10,
+            fontName=code_font, fontSize=7, leading=10,
             textColor=HexColor(mu),
         ),
         "bib": ParagraphStyle("Bib",
@@ -264,7 +399,7 @@ def make_styles(t: dict) -> dict:
             spaceBefore=t["section_gap"], spaceAfter=8,
         ),
         "math_fallback": ParagraphStyle("MathFb",
-            fontName="Courier", fontSize=9, leading=13,
+            fontName=code_font, fontSize=9, leading=13,
             textColor=HexColor(dk),
         ),
         "eq_label": ParagraphStyle("EqLabel",
@@ -987,8 +1122,41 @@ def build_story(content: list, tokens: dict, styles: dict) -> list:
 # Main build
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _contains_cjk(value) -> bool:
+    if isinstance(value, str):
+        return any(
+            0x2E80 <= codepoint <= 0x9FFF
+            or 0xAC00 <= codepoint <= 0xD7AF
+            or 0xF900 <= codepoint <= 0xFAFF
+            or 0x20000 <= codepoint <= 0x2FA1F
+            for codepoint in map(ord, value)
+        )
+    if isinstance(value, dict):
+        return any(_contains_cjk(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_cjk(item) for item in value)
+    return False
+
+
 def build(tokens: dict, content: list, out_path: str) -> dict:
-    register_fonts(tokens)
+    font_set = register_fonts(tokens)
+    if _contains_cjk({
+        "title": tokens.get("title", ""),
+        "author": tokens.get("author", ""),
+        "date": tokens.get("date", ""),
+        "content": content,
+    }):
+        if font_set["regular"]:
+            tokens["font_display_rl"] = font_set["bold"]
+            tokens["font_body_rl"] = font_set["regular"]
+            tokens["font_body_b_rl"] = font_set["bold"]
+            tokens["font_code_rl"] = font_set["regular"]
+        else:
+            print(
+                "[minimax-pdf] warning: no installed CJK-capable TrueType font "
+                "was found; CJK text may not render correctly.",
+                file=sys.stderr,
+            )
     styles = make_styles(tokens)
 
     doc = BeautifulDoc(

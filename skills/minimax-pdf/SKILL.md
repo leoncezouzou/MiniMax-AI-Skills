@@ -190,3 +190,10 @@ bash scripts/make.sh demo    # build a sample PDF
 | `pypdf` | fill, merge, reformat | `pip install pypdf` |
 | Node.js 18+ | `render_cover.js` | system |
 | `playwright` + Chromium | `render_cover.js` | `npm install -g playwright && npx playwright install chromium` |
+
+For body pages, ReportLab's built-in fonts do not contain CJK glyphs. The renderer
+automatically selects an installed TrueType CJK font on Windows, macOS, or Linux
+when the document contains CJK text. Set `MINIMAX_PDF_CJK_FONT` (and
+optionally `MINIMAX_PDF_CJK_BOLD_FONT`) to override font discovery when a custom
+font is required. No font files are bundled by this skill; install or provide a
+font on the host if automatic discovery finds none.
