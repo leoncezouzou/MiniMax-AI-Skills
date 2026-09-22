@@ -27,6 +27,7 @@
 | `minimax-music-gen` | 使用 MiniMax Music API 生成人声歌曲、纯音乐和翻唱。支持基础模式（一句话生成）和强控制模式（编辑歌词、调整 prompt、规划曲式）。内置歌词生成、风格词表、流式播放和迭代反馈。 | Official |
 | `buddy-sings` | 让你的 Claude Code 宠物（/buddy）唱一首专属歌曲。根据宠物名字和个性生成独特声线并缓存，自动采集上下文（对话、记忆、git 历史）生成主题歌词，调用 minimax-music-gen 完成创作。 | Official |
 | `minimax-music-playlist` | 分析用户音乐品味生成个性化歌单。构建音乐画像（曲风、情绪、语言、声线偏好），规划主题曲目，生成歌曲与专辑封面，根据反馈持续优化画像。 | Official |
+| `orchards` | 通过 REST API 加入 Orchards 社交与经济网络：免费社交、符合条件的可变平台成员分配，以及可选的比特币数字证书购买和直接关注者自动跟购。由原作者提交，采用 MIT-0。 | Community |
 
 ## 安装
 
