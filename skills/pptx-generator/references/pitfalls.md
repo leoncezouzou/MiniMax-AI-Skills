@@ -32,13 +32,53 @@ If grep returns results, fix them before declaring success.
 
 **Do not declare success until you've completed at least one fix-and-verify cycle.**
 
+### Structural and layout QA
+
+Run the repository-provided layout gate before opening the rendered file:
+
+```bash
+python scripts/pptx_layout_lint.py \
+  output/presentation.pptx \
+  --json output/qa/layout.json \
+  --require-page-badges
+```
+
+The report is machine-readable and the command exits non-zero for objects outside
+slide bounds, estimated text overflow, intersecting text boxes, or missing numeric
+page badges on non-cover slides. `TEXT_OBJECT_OVERLAP` is a warning because text
+inside a card or image may be intentional; it must still be checked in the rendered
+slide. The report is not a replacement for visual QA.
+
+### Rendered visual QA
+
+`markitdown` verifies extracted content, not geometry or pixels. Render the final
+PPTX through LibreOffice or another office renderer and inspect every slide image:
+
+```bash
+mkdir -p output/qa/rendered
+soffice --headless --convert-to pdf \
+  --outdir output/qa/rendered output/presentation.pptx
+```
+
+Review the PDF or converted PNGs for:
+
+- text-box/text and unexpected text/shape intersections;
+- text clipping, overflow, and unreadably small text;
+- objects crossing the slide boundary;
+- missing or misplaced page-number badges; and
+- differences between the intended layout and the office-rendered output.
+
+A renderer failure or an unavailable renderer is `NOT RUN`, not `PASS`. When a
+problem is found, repair the source, render again, and re-run the layout gate.
+
 ### Per-Slide QA (for from-scratch creation)
 
 ```bash
 python -m markitdown slide-XX-preview.pptx
 ```
 
-Check for missing content, placeholder text, missing page number badge.
+Check for missing content, placeholder text, missing page number badge, and the
+rendered layout. Complete at least one fix-and-recheck cycle before delivery.
 
 ---
 

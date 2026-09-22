@@ -60,6 +60,33 @@ slide.addText("Title", {
 
 **Tip:** Text boxes have internal margin by default. Set `margin: 0` when you need text to align precisely with shapes, lines, or icons at the same x-position.
 
+### Text fitting and line spacing
+
+Text boxes with variable-length content need an explicit height and a layout
+policy. `fit: "shrink"` asks PowerPoint to reduce the text size when content is
+too tall; it does not replace rendered QA, so inspect the final slide after export.
+For proportional line height, use `lineSpacingMultiple` rather than guessing a
+fixed point value for every font size:
+
+```javascript
+slide.addText(body, {
+  x: 0.5, y: 1.2, w: 8.5, h: 2.4,
+  fontSize: 16,
+  lineSpacingMultiple: 1.1,
+  paraSpaceAfter: 6,
+  fit: "shrink"
+});
+```
+
+`lineSpacing` is an exact value in points, while `lineSpacingMultiple` is a
+multiple such as `1.1` or `1.5`. Do not apply a large fixed `lineSpacing` to all
+font sizes: it can create the same vertical collisions reported in the PPTX issue.
+For bulleted text, prefer `paraSpaceAfter` and per-item `breakLine` instead of
+combining bullets with a large `lineSpacing` value.
+
+After changing text size, line spacing, margins, or box height, run the layout gate
+and render every slide again. A text extractor cannot detect visual overlap.
+
 ---
 
 ## Lists & Bullets
@@ -383,7 +410,9 @@ These issues cause file corruption, visual bugs, or broken output. Avoid them.
 
 4. **Use `breakLine: true`** between array items or text runs together
 
-5. **Avoid `lineSpacing` with bullets** - causes excessive gaps; use `paraSpaceAfter` instead
+5. **Avoid large fixed `lineSpacing` values** - they can create excessive gaps or
+   vertical collisions; use `lineSpacingMultiple` for proportional text and
+   `paraSpaceAfter` for bullet separation
 
 6. **Each presentation needs fresh instance** - don't reuse `pptxgen()` objects
 

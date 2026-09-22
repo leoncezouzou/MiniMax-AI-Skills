@@ -121,7 +121,50 @@ Run with: `cd slides && node compile.js`
 
 ### Step 7: QA (Required)
 
-See [QA Process](references/pitfalls.md#qa-process).
+A successful file write is not a successful presentation. Run content, structural,
+rendered, and visual checks before delivery; keep the checks separate so a text
+extractor cannot be reported as visual inspection.
+
+1. Extract text and check for missing content, placeholders, and ordering:
+
+   ```bash
+   python -m markitdown output/presentation.pptx
+   ```
+
+2. Run the dependency-free layout gate from the skill directory. It checks slide
+   boundaries, estimated text overflow, text-box intersections, and the required
+   page badges, and writes a machine-readable report:
+
+   ```bash
+   python scripts/pptx_layout_lint.py \
+     output/presentation.pptx \
+     --json output/qa/layout.json \
+     --require-page-badges
+   ```
+
+   A non-zero exit status is a failed layout gate. Warnings about intentional
+   text-over-shape composition still require visual review; do not suppress them
+   by treating the JSON report as a screenshot.
+
+3. Render the final PPTX with a real office renderer, then inspect every rendered
+   slide image (not file metadata). For example, with LibreOffice installed:
+
+   ```bash
+   mkdir -p output/qa/rendered
+   soffice --headless --convert-to pdf \
+     --outdir output/qa/rendered output/presentation.pptx
+   ```
+
+   Open the resulting PDF or convert it to PNG with an available PDF renderer.
+   Check text overlap, clipping, out-of-bounds objects, page badges, and unreadable
+   text at the intended viewing size. If no renderer is available, report visual QA
+   as not run rather than claiming PASS.
+
+4. Repair, re-render, and re-run both gates until the final artifact passes. The
+   complete flow is: generate → extract → lint → render → inspect → repair →
+   lint → re-render → inspect.
+
+See [QA Process](references/pitfalls.md#qa-process) for the detailed checklist.
 
 ### Output Structure
 
@@ -132,7 +175,10 @@ slides/
 ├── ...
 ├── imgs/                # Images used in slides
 └── output/              # Final artifacts
-    └── presentation.pptx
+    ├── presentation.pptx
+    └── qa/
+        ├── layout.json  # Machine-readable layout gate report
+        └── rendered/    # PDF/PNG renderings used for visual QA
 ```
 
 ---
@@ -247,3 +293,7 @@ slide.addText("03", {
 - `pip install "markitdown[pptx]"` — text extraction
 - `npm install -g pptxgenjs` — creating from scratch
 - `npm install -g react-icons react react-dom sharp` — icons (optional)
+- `soffice` / LibreOffice or another office renderer — rendered visual QA (optional
+  for generation, mandatory before claiming visual PASS)
+- The layout gate uses only the Python standard library; no additional Python
+  dependency is required.
