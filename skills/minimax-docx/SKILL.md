@@ -60,11 +60,11 @@ var mainPart = doc.AddMainDocumentPart();
 mainPart.Document = new Document(new Body());
 
 // --- Your logic here ---
-// Read the relevant Samples/*.cs file FIRST for tested patterns.
-// See Samples/ table in References section below.
+// Read the relevant scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs file FIRST
+// for tested patterns. See the sample table in the References section below.
 ```
 
-**Before writing any C#, read the relevant `Samples/*.cs` file** — they contain compilable, SDK-version-verified patterns. The Samples table in the References section below maps topics to files.
+**Before writing any C#, read the relevant `scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs` file** — they contain compilable, SDK-version-verified patterns. The sample table in the References section below maps topics to files.
 
 ## CLI shorthand
 
@@ -108,11 +108,11 @@ Analyze structure for editing scenarios: `$CLI analyze --input document.docx`
 
 ## Scenario A: Create
 
-Read `references/scenario_a_create.md`, `references/typography_guide.md`, and `references/design_principles.md` first. Pick an aesthetic recipe from `Samples/AestheticRecipeSamples.cs` that matches the document type — do not invent formatting values. For CJK, also read `references/cjk_typography.md`.
+Read `references/scenario_a_create.md`, `references/typography_guide.md`, and `references/design_principles.md` first. Pick an aesthetic recipe from `scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples.cs` that matches the document type — do not invent formatting values. For CJK, also read `references/cjk_typography.md`.
 
 **Choose your path:**
 - **Simple** (plain text, minimal formatting): use CLI — `$CLI create --type report --output out.docx --config content.json`
-- **Structural** (custom styles, multi-section, TOC, images, complex tables): write C# directly. Read the relevant `Samples/*.cs` first.
+- **Structural** (custom styles, multi-section, TOC, images, complex tables): write C# directly. Read the relevant `scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs` first.
 
 CLI options: `--type` (report|letter|memo|academic), `--title`, `--author`, `--page-size` (letter|a4|legal|a3), `--margins` (standard|narrow|wide), `--header`, `--footer`, `--page-numbers`, `--toc`, `--content-json`.
 
@@ -124,7 +124,7 @@ Read `references/scenario_b_edit_content.md` first. Preview → analyze → edit
 
 **Choose your path:**
 - **Simple** (text replacement, placeholder fill): use CLI subcommands.
-- **Structural** (add/reorganize sections, modify styles, manipulate tables, insert images): write C# directly. Read `references/openxml_element_order.md` and the relevant `Samples/*.cs`.
+- **Structural** (add/reorganize sections, modify styles, manipulate tables, insert images): write C# directly. Read `references/openxml_element_order.md` and the relevant `scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs`.
 
 Available CLI edit subcommands:
 - `replace-text --find "X" --replace "Y"`
@@ -239,22 +239,24 @@ Load as needed — don't load all at once. Pick the most relevant files for the 
 
 ### C# code samples (compilable, heavily commented — read when writing code)
 
+The sample sources live under `scripts/dotnet/MiniMaxAIDocx.Core/Samples/`, relative to the `minimax-docx` skill directory. Use this prefix when opening a sample from the skill root or another working directory.
+
 | File | Topic |
 |------|-------|
-| `Samples/DocumentCreationSamples.cs` | Document lifecycle: create, open, save, streams, doc defaults, settings, properties, page setup, multi-section |
-| `Samples/StyleSystemSamples.cs` | Styles: Normal/Heading chain, character/table/list styles, DocDefaults, latentStyles, CJK 公文, APA 7th, import, resolve inheritance |
-| `Samples/CharacterFormattingSamples.cs` | RunProperties: fonts, size, bold/italic, all underlines, color, highlight, strike, sub/super, caps, spacing, shading, border, emphasis marks |
-| `Samples/ParagraphFormattingSamples.cs` | ParagraphProperties: justification, indentation, line/paragraph spacing, keep/widow, outline level, borders, tabs, numbering, bidi, frame |
-| `Samples/TableSamples.cs` | Tables: borders, grid, cell props, margins, row height, header repeat, merge (H+V), nested, floating, three-line 三线表, zebra striping |
-| `Samples/HeaderFooterSamples.cs` | Headers/footers: page numbers, "Page X of Y", first/even/odd, logo image, table layout, 公文 "-X-", per-section |
-| `Samples/ImageSamples.cs` | Images: inline, floating, text wrapping, border, alt text, in header/table, replace, SVG fallback, dimension calc |
-| `Samples/ListAndNumberingSamples.cs` | Numbering: bullets, multi-level decimal, custom symbols, outline→headings, legal, Chinese 一/（一）/1./(1), restart/continue |
-| `Samples/FieldAndTocSamples.cs` | Fields: TOC, SimpleField vs complex field, DATE/PAGE/REF/SEQ/MERGEFIELD/IF/STYLEREF, TOC styles |
-| `Samples/FootnoteAndCommentSamples.cs` | Footnotes, endnotes, comments (4-file system), bookmarks, hyperlinks (internal + external) |
-| `Samples/TrackChangesSamples.cs` | Revisions: insertions (w:t), deletions (w:delText!), formatting changes, accept/reject all, move tracking |
-| `Samples/AestheticRecipeSamples.cs` | 13 aesthetic recipes from authoritative sources: ModernCorporate, AcademicThesis, ExecutiveBrief, ChineseGovernment (GB/T 9704), MinimalModern, IEEE Conference, ACM sigconf, APA 7th, MLA 9th, Chicago/Turabian, Springer LNCS, Nature, HBR — each with exact values from official style guides |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/DocumentCreationSamples.cs` | Document lifecycle: create, open, save, streams, doc defaults, settings, properties, page setup, multi-section |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/StyleSystemSamples.cs` | Styles: Normal/Heading chain, character/table/list styles, DocDefaults, latentStyles, CJK 公文, APA 7th, import, resolve inheritance |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/CharacterFormattingSamples.cs` | RunProperties: fonts, size, bold/italic, all underlines, color, highlight, strike, sub/super, caps, spacing, shading, border, emphasis marks |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/ParagraphFormattingSamples.cs` | ParagraphProperties: justification, indentation, line/paragraph spacing, keep/widow, outline level, borders, tabs, numbering, bidi, frame |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/TableSamples.cs` | Tables: borders, grid, cell props, margins, row height, header repeat, merge (H+V), nested, floating, three-line 三线表, zebra striping |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/HeaderFooterSamples.cs` | Headers/footers: page numbers, "Page X of Y", first/even/odd, logo image, table layout, 公文 "-X-", per-section |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/ImageSamples.cs` | Images: inline, floating, text wrapping, border, alt text, in header/table, replace, SVG fallback, dimension calc |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/ListAndNumberingSamples.cs` | Numbering: bullets, multi-level decimal, custom symbols, outline→headings, legal, Chinese 一/（一）/1./(1), restart/continue |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/FieldAndTocSamples.cs` | Fields: TOC, SimpleField vs complex field, DATE/PAGE/REF/SEQ/MERGEFIELD/IF/STYLEREF, TOC styles |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/FootnoteAndCommentSamples.cs` | Footnotes, endnotes, comments (4-file system), bookmarks, hyperlinks (internal + external) |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/TrackChangesSamples.cs` | Revisions: insertions (w:t), deletions (w:delText!), formatting changes, accept/reject all, move tracking |
+| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples.cs` | 13 aesthetic recipes from authoritative sources: ModernCorporate, AcademicThesis, ExecutiveBrief, ChineseGovernment (GB/T 9704), MinimalModern, IEEE Conference, ACM sigconf, APA 7th, MLA 9th, Chicago/Turabian, Springer LNCS, Nature, HBR — each with exact values from official style guides |
 
-Note: `Samples/` path is relative to `scripts/dotnet/MiniMaxAIDocx.Core/`.
+All sample paths above are relative to the `minimax-docx` skill directory; they are not relative to `skills/minimax-docx/Samples/`.
 
 ### Markdown references (read when you need specifications or design rules)
 
