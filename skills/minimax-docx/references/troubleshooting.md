@@ -240,8 +240,8 @@ $CLI analyze --input output.docx | grep -i "sdt\|toc"
   FieldAndTocSamples.EnableUpdateFieldsOnOpen(settingsPart);
   ```
 - **If SDT is damaged:** Keep the entire SDT block from the template intact. Do not modify it.
-- **If field code is missing:** Ensure the TOC contains: `fldChar begin` + `instrText` + `fldChar separate` + static entries + `fldChar end`. See `FieldAndTocSamples.CreateMixedTocStructure()` for the complete pattern.
-- **If you rebuilt TOC from scratch (common mistake):** You likely destroyed the SDT wrapper. Use the template's original SDT block instead. See `Samples/FieldAndTocSamples.cs` method `CreateMixedTocStructure` for how real-world TOC is structured.
+- **If field code is missing:** Ensure the TOC contains: `fldChar begin` + `instrText` + `fldChar separate` + static entries + `fldChar end`. See the `CreateMixedTocStructure()` method in `scripts/dotnet/MiniMaxAIDocx.Core/Samples/FieldAndTocSamples.cs` for the complete pattern.
+- **If you rebuilt TOC from scratch (common mistake):** You likely destroyed the SDT wrapper. Use the template's original SDT block instead. See `scripts/dotnet/MiniMaxAIDocx.Core/Samples/FieldAndTocSamples.cs` method `CreateMixedTocStructure` for how real-world TOC is structured.
 
 **Prevention:** When doing Base-Replace (C-2), keep the template's TOC zone completely untouched. Do not strip, rebuild, or modify the SDT block. The TOC will auto-update when the user opens in Word.
 
@@ -336,7 +336,7 @@ int maxNumId = targetNumbering.Elements<NumberingInstance>()
     .Max(n => n.NumberID?.Value ?? 0) + 1;
 ```
 
-**Prevention:** Include `numbering.xml` reconciliation in template application workflow. See `Samples/ListAndNumberingSamples.cs` for correct numbering setup.
+**Prevention:** Include `numbering.xml` reconciliation in template application workflow. See `scripts/dotnet/MiniMaxAIDocx.Core/Samples/ListAndNumberingSamples.cs` for correct numbering setup.
 
 ---
 
